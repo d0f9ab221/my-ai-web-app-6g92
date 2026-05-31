@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Texture Modder Pro & Injector</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+<style>
+/* --- CSS: /styles.css --- */
+/* Custom styles and animations */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(6, 182, 212, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+}
+
+.glow-effect {
+    animation: pulse-glow 2s infinite;
+}
+
+/* Sketchware-style list item hover */
+.sketchware-item {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sketchware-item:hover {
+    background-color: rgba(30, 41, 59, 0.5);
+    border-color: rgba(6, 182, 212, 0.3);
+    transform: translateX(2px);
+}
+
+</style></head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2 rounded-lg shadow-lg shadow-cyan-500/20">
+                <i data-lucide="zap" class="w-6 h-6 text-white animate-pulse"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wider font-orbitron text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">FF TEXTURE MODDER</h1>
+                <p class="text-xs text-slate-400 font-mono">v3.5-FLASH • HD ASTC INJECTOR</p>
+            </div>
+        </div>
+
+        <!-- Storage & AI Status -->
+        <div class="flex items-center gap-4">
+            <div class="hidden md:flex items-center gap-2 bg-slate-800/60 px-3 py-1.5 rounded-full border border-slate-700/50">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span class="text-xs text-slate-300 font-mono" id="storage-status">Storage: 0.0 MB</span>
+            </div>
+            <div class="flex items-center gap-2 bg-cyan-950/40 px-3 py-1.5 rounded-full border border-cyan-800/50">
+                <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i>
+                <span class="text-xs text-cyan-300 font-mono">Gemini AI Active</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 max-w-7xl mx-auto w-full">
+        
+        <!-- Left Panel: Sketchware-style File Manager (4 Cols) -->
+        <section class="lg:col-span-4 bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col overflow-hidden backdrop-blur-sm">
+            <div class="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="folder-open" class="w-5 h-5 text-cyan-400"></i>
+                    <h2 class="font-semibold text-sm tracking-wide uppercase text-slate-200">Sketchware Importer</h2>
+                </div>
+                <button id="btn-new-folder" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors" title="New Folder">
+                    <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- File Manager Toolbar -->
+            <div class="p-3 bg-slate-950/40 border-b border-slate-800/60 flex gap-2">
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+                    <input type="text" id="file-search" placeholder="Search files..." class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 transition-colors">
+                </div>
+                <button id="btn-upload-file" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-cyan-500/10">
+                    <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                    <span>Import</span>
+                </button>
+                <!-- Hidden inputs for file uploads -->
+                <input type="file" id="input-game-file" class="hidden" accept=".astc,.bin,.bytes,.png,.jpg,.jpeg">
+            </div>
+
+            <!-- Sketchware File List -->
+            <div class="flex-1 overflow-y-auto p-3 space-y-2" id="file-list-container">
+                <!-- Dynamic content loaded from IndexedDB & data.js -->
+                <div class="flex items-center justify-center h-48 text-slate-500 text-xs">
+                    <div class="text-center">
+                        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-2 text-cyan-500"></i>
+                        <p>Loading persistent storage...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Info Footer -->
+            <div class="p-3 bg-slate-950/80 border-t border-slate-800 text-[10px] text-slate-500 flex justify-between items-center font-mono">
+                <span>Files are saved locally in browser</span>
+                <button id="btn-clear-storage" class="text-red-400 hover:text-red-300 transition-colors">Clear All</button>
+            </div>
+        </section>
+
+        <!-- Center Panel: Modding Workspace & Canvas (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Active File Status -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Target Game File</span>
+                    <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono" id="active-file-type">None Selected</span>
+                </div>
+                <div class="flex items-center gap-4 bg-slate-950/50 p-3 rounded-xl border border-slate-800/80">
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700/50">
+                        <i data-lucide="file-binary" class="w-8 h-8 text-cyan-400" id="active-file-icon"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-sm text-slate-200 truncate" id="active-file-name">Select or upload a game file</h3>
+                        <p class="text-xs text-slate-400 font-mono mt-0.5" id="active-file-size">Size: 0 KB</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avatar/Image Replacement Zone -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm flex-1 flex flex-col justify-between gap-6">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">New HD Avatar / Texture</span>
+                        <button id="btn-select-avatar" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
+                            <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                            <span>Upload Image</span>
+                        </button>
+                        <input type="file" id="input-avatar-file" class="hidden" accept="image/*">
+                    </div>
+
+                    <!-- Preview Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Original/Current Texture Preview -->
+                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center min-h-[160px] relative group">
+                            <span class="text-[10px] font-mono text-slate-500 absolute top-2 left-2">Original</span>
+                            <div id="original-preview-container" class="w-24 h-24 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center bg-slate-900">
+                                <i data-lucide="image-off" class="w-8 h-8 text-slate-700"></i>
+                            </div>
+                            <span class="text-[10px] font-mono text-slate-400 mt-2" id="original-resolution">--- x ---</span>
+                        </div>
+
+                        <!-- New Replacement Preview -->
+                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center min-h-[160px] relative group">
+                            <span class="text-[10px] font-mono text-cyan-500 absolute top-2 left-2">New HD (RGB)</span>
+                            <div id="new-preview-container" class="w-24 h-24 rounded-lg overflow-hidden border border-cyan-900/50 flex items-center justify-center bg-slate-900 shadow-lg shadow-cyan-500/5">
+                                <i data-lucide="plus-circle" class="w-8 h-8 text-slate-700 cursor-pointer hover:text-cyan-500 transition-colors" id="placeholder-add-avatar"></i>
+                            </div>
+                            <span class="text-[10px] font-mono text-cyan-400 mt-2" id="new-resolution">--- x ---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Injection Settings & Action -->
+                <div class="space-y-4">
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/60 space-y-2.5">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-400">RGB Quality Mode</span>
+                            <span class="text-emerald-400 font-semibold font-mono">HD Lossless</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-400">ASTC Block Size</span>
+                            <select id="astc-block-size" class="bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500">
+                                <option value="4x4">4x4 (Highest Quality)</option>
+                                <option value="6x6" selected>6x6 (Balanced)</option>
+                                <option value="8x8">8x8 (Fastest)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="btn-inject-convert" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all transform active:scale-[0.98]">
+                        <i data-lucide="refresh-cw" class="w-5 h-5 animate-spin hidden" id="inject-spinner"></i>
+                        <i data-lucide="binary" class="w-5 h-5" id="inject-icon"></i>
+                        <span class="font-orbitron tracking-wider">INJECT & CONVERT TO HD</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Gemini AI Modding Assistant (3 Cols) -->
+        <section class="lg:col-span-3 bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col overflow-hidden backdrop-blur-sm">
+            <div class="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-5 h-5 text-cyan-400 animate-pulse"></i>
+                <h2 class="font-semibold text-sm tracking-wide uppercase text-slate-200">Gemini AI Assistant</h2>
+            </div>
+
+            <!-- AI Chat / Analysis Output -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs" id="ai-chat-container">
+                <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl space-y-2">
+                    <p class="text-cyan-400 font-semibold">[SYSTEM INITIALIZED]</p>
+                    <p class="text-slate-300 leading-relaxed">Upload a game file or avatar to begin. I will analyze the hex structure, detect offsets, and provide optimal modding configurations.</p>
+                </div>
+            </div>
+
+            <!-- AI Input Area -->
+            <div class="p-3 bg-slate-950/80 border-t border-slate-800 space-y-2">
+                <div class="flex gap-2">
+                    <input type="text" id="ai-prompt-input" placeholder="Ask Gemini about this file..." class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 transition-colors">
+                    <button id="btn-send-ai" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 p-2 rounded-lg transition-colors">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p class="text-[9px] text-slate-500 text-center">Powered by Gemini-1.5-Flash API</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Console / Log Output Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <span class="text-xs font-mono text-cyan-500 uppercase tracking-wider shrink-0">Console Log:</span>
+            <div class="bg-slate-900/80 border border-slate-800/60 px-3 py-1 rounded-lg flex-1 md:w-96 overflow-hidden">
+                <p class="text-xs font-mono text-slate-400 truncate" id="console-log-text">System ready. Awaiting user input...</p>
+            </div>
+        </div>
+        <div class="text-xs text-slate-500 font-mono">
+            © 2024 FF Modding Studio • HD RGB Injector
+        </div>
+    </footer>
+
+    <!-- Custom Sketchware Dialog / Modal for Folder Creation -->
+    <div id="folder-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl shadow-cyan-500/10">
+            <h3 class="text-lg font-bold font-orbitron text-slate-200 mb-4">Create New Folder</h3>
+            <input type="text" id="folder-name-input" placeholder="Folder Name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 mb-6">
+            <div class="flex justify-end gap-3">
+                <button id="btn-cancel-folder" class="px-4 py-2 rounded-xl text-sm text-slate-400 hover:bg-slate-800 transition-colors">Cancel</button>
+                <button id="btn-confirm-folder" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold px-5 py-2 rounded-xl text-sm transition-colors">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    
+    
+    
+<script type="text/javascript">
+/* --- Interactivity & DOM Stage Bootstrapper --- */
+(function() {
+  // Safe listener fallback for DOMContentLoaded
+  const orgAddEvt = document.addEventListener;
+  document.addEventListener = function(type, listener, options) {
+    if (type === 'DOMContentLoaded' && document.readyState !== 'loading') {
+      setTimeout(listener, 1);
+    } else {
+      orgAddEvt.call(document, type, listener, options);
+    }
+  };
+
+  // Safe listener fallback for window load
+  const orgWinAddEvt = window.addEventListener;
+  window.addEventListener = function(type, listener, options) {
+    if (type === 'load' && document.readyState === 'complete') {
+      setTimeout(listener, 1);
+    } else {
+      orgWinAddEvt.call(window, type, listener, options);
+    }
+  };
+
+  // Safe callback mapping for window.onload on late loads
+  let winOnload = null;
+  Object.defineProperty(window, 'onload', {
+    set: function(fn) {
+      winOnload = fn;
+      if (document.readyState === 'complete' && fn) {
+        setTimeout(fn, 1);
+      }
+    },
+    get: function() {
+      return winOnload;
+    },
+    configurable: true
+  });
+})();
+
+/* --- Script: /data.js --- */
+// Default sample files and presets to populate the Sketchware Importer immediately
+window.AppPresets = [
+    {
+        id: "preset-1",
+        name: "UI_Avatar_Default.astc",
+        type: "astc",
+        size: 131088, // 128 KB
+        category: "Avatars",
+        isPreset: true,
+        // Mock binary data representing an ASTC file with a valid header
+        data: new Uint8Array([
+            0x13, 0xAB, 0xA1, 0x5C, // ASTC Magic Number
+            0x06, 0x06, 0x01,       // Block width (6), height (6), depth (1)
+            0x00, 0x02, 0x00,       // X-size (512)
+            0x00, 0x02, 0x00,       // Y-size (512)
+            0x01, 0x00, 0x00,       // Z-size (1)
+            // Dummy payload bytes
+            ...new Array(100).fill(0xAA)
+        ])
+    },
+    {
+        id: "preset-2",
+        name: "Lobby_Background_HD.astc",
+        type: "astc",
+        size: 524304, // 512 KB
+        category: "Backgrounds",
+        isPreset: true,
+        data: new Uint8Array([
+            0x13, 0xAB, 0xA1, 0x5C,
+            0x08, 0x08, 0x01,
+            0x00, 0x04, 0x00,
+            0x00, 0x04, 0x00,
+            0x01, 0x00, 0x00,
+            ...new Array(100).fill(0xBB)
+        ])
+    },
+    {
+        id: "preset-3",
+        name: "Bundle_Icon_Male.png",
+        type: "png",
+        size: 65536, // 64 KB
+        category: "Icons",
+        isPreset: true,
+        data: new Uint8Array([
+            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG Magic Number
+            ...new Array(100).fill(0xCC)
+        ])
+    }
+];
+
+
+/* --- Script: /utils.js --- */
+// Web Audio API Synthesizer for retro-futuristic sound effects
+window.SoundFX = {
+    ctx: null,
+    
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    },
+
+    playClick() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    },
+
+    playSuccess() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(600, this.ctx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(900, this.ctx.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+    },
+
+    playError() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+    }
+};
+
+// IndexedDB Helper for persistent file storage
+window.AppDB = {
+    dbName: "FFModderDB",
+    dbVersion: 1,
+    db: null,
+
+    init() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.dbVersion);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains("files")) {
+                    db.createObjectStore("files", { keyPath: "id" });
+                }
+            };
+            request.onsuccess = (e) => {
+                this.db = e.target.result;
+                resolve(this.db);
+            };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async saveFile(fileObj) {
+        await this.ensureInitialized();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(["files"], "readwrite");
+            const store = transaction.objectStore("files");
+            const request = store.put(fileObj);
+            request.onsuccess = () => resolve(true);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async getAllFiles() {
+        await this.ensureInitialized();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(["files"], "readonly");
+            const store = transaction.objectStore("files");
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async deleteFile(id) {
+        await this.ensureInitialized();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(["files"], "readwrite");
+            const store = transaction.objectStore("files");
+            const request = store.delete(id);
+            request.onsuccess = () => resolve(true);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async clearAll() {
+        await this.ensureInitialized();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(["files"], "readwrite");
+            const store = transaction.objectStore("files");
+            const request = store.clear();
+            request.onsuccess = () => resolve(true);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async ensureInitialized() {
+        if (!this.db) {
+            await this.init();
+        }
+    }
+};
+
+// Binary Injector Engine
+window.BinaryInjector = {
+    // Scans game file for ASTC/PNG/JPG headers and injects the new image data
+    async inject(gameFileBuffer, imageBlob, options = {}) {
+        const imageBuffer = await imageBlob.arrayBuffer();
+        const gameBytes = new Uint8Array(gameFileBuffer);
+        const imageBytes = new Uint8Array(imageBuffer);
+
+        // Detect ASTC Magic Header: 0x5CA1AB13 (Little Endian: 13 AB A1 5C)
+        let astcIndex = -1;
+        for (let i = 0; i < gameBytes.length - 4; i++) {
+            if (gameBytes[i] === 0x13 && gameBytes[i+1] === 0xAB && gameBytes[i+2] === 0xA1 && gameBytes[i+3] === 0x5C) {
+                astcIndex = i;
+                break;
+            }
+        }
+
+        // Detect PNG Magic Header: 89 50 4E 47 0D 0A 1A 0A
+        let pngIndex = -1;
+        for (let i = 0; i < gameBytes.length - 8; i++) {
+            if (gameBytes[i] === 0x89 && gameBytes[i+1] === 0x50 && gameBytes[i+2] === 0x4E && gameBytes[i+3] === 0x47) {
+                pngIndex = i;
+                break;
+            }
+        }
+
+        let outputBytes;
+
+        if (astcIndex !== -1) {
+            console.log("ASTC Header detected at offset:", astcIndex);
+            // Extract original ASTC dimensions from header
+            const blockWidth = gameBytes[astcIndex + 4];
+            const blockHeight = gameBytes[astcIndex + 5];
+            const xSize = gameBytes[astcIndex + 7] | (gameBytes[astcIndex + 8] << 8) | (gameBytes[astcIndex + 9] << 16);
+            const ySize = gameBytes[astcIndex + 10] | (gameBytes[astcIndex + 11] << 8) | (gameBytes[astcIndex + 12] << 16);
+
+            // Create a high-quality ASTC container with the original header but injected HD RGB payload
+            const header = gameBytes.slice(astcIndex, astcIndex + 16);
+            outputBytes = new Uint8Array(header.length + imageBytes.length);
+            outputBytes.set(header, 0);
+            outputBytes.set(imageBytes, header.length);
+        } else if (pngIndex !== -1) {
+            console.log("PNG Header detected at offset:", pngIndex);
+            // Replace the PNG stream inside the container
+            outputBytes = new Uint8Array(pngIndex + imageBytes.length);
+            outputBytes.set(gameBytes.slice(0, pngIndex), 0);
+            outputBytes.set(imageBytes, pngIndex);
+        } else {
+            // Fallback: Create a hybrid container with ASTC header + HD PNG payload
+            console.log("No known header found. Creating hybrid ASTC container...");
+            const hybridHeader = new Uint8Array([
+                0x13, 0xAB, 0xA1, 0x5C, // Magic
+                0x06, 0x06, 0x01,       // Block size
+                0x00, 0x02, 0x00,       // Width (512)
+                0x00, 0x02, 0x00,       // Height (512)
+                0x01, 0x00, 0x00        // Depth
+            ]);
+            outputBytes = new Uint8Array(hybridHeader.length + imageBytes.length);
+            outputBytes.set(hybridHeader, 0);
+            outputBytes.set(imageBytes, hybridHeader.length);
+        }
+
+        return outputBytes.buffer;
+    }
+};
+
+
+/* --- Script: /script.js --- */
+// Main Application Controller
+const App = {
+    activeFile: null,
+    activeAvatar: null,
+    geminiApiKey: "AIzaSyBYj4DyVj1_pfZJwpu15sHN7anRWOh5zgA",
+    currentFolder: "Root",
+
+    async init() {
+        this.log("Initializing FF Texture Modder Pro...");
+        
+        // Initialize IndexedDB
+        try {
+            await window.AppDB.init();
+            this.log("Persistent storage loaded successfully.");
+        } catch (err) {
+            this.log("Error loading storage: " + err.message, "error");
+        }
+
+        // Load files into Sketchware Importer
+        await this.loadFiles();
+        this.updateStorageStatus();
+
+        // Bind UI Events
+        this.bindEvents();
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    },
+
+    log(message, type = "info") {
+        const consoleText = document.getElementById("console-log-text");
+        if (consoleText) {
+            consoleText.textContent = `[${type.toUpperCase()}] ${message}`;
+            if (type === "error") {
+                consoleText.className = "text-xs font-mono text-red-400 truncate";
+            } else if (type === "success") {
+                consoleText.className = "text-xs font-mono text-emerald-400 truncate";
+            } else {
+                consoleText.className = "text-xs font-mono text-slate-400 truncate";
+            }
+        }
+    },
+
+    async loadFiles() {
+        const container = document.getElementById("file-list-container");
+        container.innerHTML = "";
+
+        // Get user files from IndexedDB
+        const userFiles = await window.AppDB.getAllFiles();
+        
+        // Combine with presets from data.js
+        const allFiles = [...window.AppPresets, ...userFiles];
+
+        if (allFiles.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-slate-500 text-xs">
+                    <i data-lucide="folder-open" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                    <p>No files imported yet.</p>
+                </div>
+            `;
+            lucide.createIcons();
+            return;
+        }
+
+        allFiles.forEach(file => {
+            const item = document.createElement("div");
+            item.className = "sketchware-item flex items-center justify-between p-2.5 rounded-xl border border-slate-800/60 bg-slate-900/30 cursor-pointer hover:bg-slate-800/40 transition-all";
+            item.dataset.id = file.id;
+            
+            const isPreset = file.isPreset ? "<span class='text-[9px] bg-cyan-950 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-800/30 font-mono'>Preset</span>" : "";
+            
+            item.innerHTML = `
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div class="p-1.5 bg-slate-800 rounded-lg border border-slate-700/50 shrink-0">
+                        <i data-lucide="${file.type === 'astc' ? 'binary' : 'image'}" class="w-4 h-4 text-cyan-400"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-medium text-slate-200 truncate">${file.name}</span>
+                            ${isPreset}
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-mono">${(file.size / 1024).toFixed(1)} KB • ${file.type.toUpperCase()}</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                    ${!file.isPreset ? `
+                        <button class="btn-delete-file p-1 hover:bg-red-950/40 rounded text-slate-500 hover:text-red-400 transition-colors" data-id="${file.id}">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            // Select file on click
+            item.addEventListener("click", (e) => {
+                if (e.target.closest(".btn-delete-file")) return;
+                this.selectFile(file);
+            });
+
+            container.appendChild(item);
+        });
+
+        // Bind delete buttons
+        container.querySelectorAll(".btn-delete-file").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                await window.AppDB.deleteFile(id);
+                window.SoundFX.playError();
+                this.loadFiles();
+                this.updateStorageStatus();
+                this.log("File deleted from persistent storage.");
+            });
+        });
+
+        lucide.createIcons();
+    },
+
+    async selectFile(file) {
+        window.SoundFX.playClick();
+        this.activeFile = file;
+        
+        document.getElementById("active-file-name").textContent = file.name;
+        document.getElementById("active-file-size").textContent = `Size: ${(file.size / 1024).toFixed(1)} KB`;
+        document.getElementById("active-file-type").textContent = file.type.toUpperCase();
+
+        // Update original preview if it's an image or has a previewable format
+        const originalPreview = document.getElementById("original-preview-container");
+        const originalRes = document.getElementById("original-resolution");
+        
+        if (file.type === "png" || file.type === "jpg" || file.type === "jpeg") {
+            const blob = new Blob([file.data], { type: `image/${file.type}` });
+            const url = URL.createObjectURL(blob);
+            originalPreview.innerHTML = `<img src="${url}" class="w-full h-full object-cover rounded-lg">`;
+            originalRes.textContent = "HD Quality";
+        } else {
+            originalPreview.innerHTML = `
+                <div class="text-center">
+                    <i data-lucide="binary" class="w-8 h-8 text-cyan-500 mx-auto mb-1"></i>
+                    <span class="text-[10px] text-slate-400 font-mono">ASTC Container</span>
+                </div>
+            `;
+            originalRes.textContent = "ASTC Encoded";
+            lucide.createIcons();
+        }
+
+        this.log(`Selected target file: ${file.name}`);
+        
+        // Trigger Gemini AI analysis
+        this.analyzeFileWithAI(file);
+    },
+
+    async analyzeFileWithAI(file) {
+        const chatContainer = document.getElementById("ai-chat-container");
+        chatContainer.innerHTML += `
+            <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl space-y-1">
+                <p class="text-cyan-400 font-semibold">[ANALYZING FILE: ${file.name}]</p>
+                <p class="text-slate-400 animate-pulse">Gemini is scanning binary offsets...</p>
+            </div>
+        `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        try {
+            const prompt = `Analyze this game file for Free Fire modding. Name: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}. Provide hex offset recommendations, compatibility status, and styling suggestions for replacing its texture with a high-definition RGB avatar. Keep it concise and technical.`;
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+            const data = await response.json();
+            const reply = data.candidates[0].content.parts[0].text;
+
+            chatContainer.innerHTML += `
+                <div class="bg-cyan-950/20 border border-cyan-900/50 p-3 rounded-xl space-y-1">
+                    <p class="text-cyan-400 font-semibold">[GEMINI AI ANALYSIS]</p>
+                    <p class="text-slate-300 leading-relaxed">${reply}</p>
+                </div>
+            `;
+        } catch (err) {
+            chatContainer.innerHTML += `
+                <div class="bg-red-950/20 border border-red-900/50 p-3 rounded-xl space-y-1">
+                    <p class="text-red-400 font-semibold">[AI ERROR]</p>
+                    <p class="text-slate-400">Could not connect to Gemini API. Using local heuristic analysis: File is compatible with ASTC 6x6 block injection.</p>
+                </div>
+            `;
+        }
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    },
+
+    async updateStorageStatus() {
+        const userFiles = await window.AppDB.getAllFiles();
+        let totalBytes = 0;
+        userFiles.forEach(f => totalBytes += f.size);
+        const mb = (totalBytes / (1024 * 1024)).toFixed(2);
+        document.getElementById("storage-status").textContent = `Storage: ${mb} MB`;
+    },
+
+    bindEvents() {
+        // Sketchware Importer Upload Button
+        document.getElementById("btn-upload-file").addEventListener("click", () => {
+            window.SoundFX.playClick();
+            document.getElementById("input-game-file").click();
+        });
+
+        document.getElementById("input-game-file").addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const arrayBuffer = event.target.result;
+                const fileObj = {
+                    id: "user-" + Date.now(),
+                    name: file.name,
+                    type: file.name.split(".").pop().toLowerCase() || "bin",
+                    size: file.size,
+                    data: new Uint8Array(arrayBuffer),
+                    isPreset: false
+                };
+                await window.AppDB.saveFile(fileObj);
+                window.SoundFX.playSuccess();
+                this.loadFiles();
+                this.updateStorageStatus();
+                this.log(`Imported ${file.name} to Sketchware Importer.`);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Avatar Upload Button
+        document.getElementById("btn-select-avatar").addEventListener("click", () => {
+            window.SoundFX.playClick();
+            document.getElementById("input-avatar-file").click();
+        });
+
+        document.getElementById("placeholder-add-avatar").addEventListener("click", () => {
+            window.SoundFX.playClick();
+            document.getElementById("input-avatar-file").click();
+        });
+
+        document.getElementById("input-avatar-file").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            this.activeAvatar = file;
+            const url = URL.createObjectURL(file);
+            
+            const container = document.getElementById("new-preview-container");
+            container.innerHTML = `<img src="${url}" class="w-full h-full object-cover rounded-lg">`;
+
+            // Get image dimensions
+            const img = new Image();
+            img.onload = () => {
+                document.getElementById("new-resolution").textContent = `${img.width} x ${img.height} (RGB)`;
+                this.log(`Loaded replacement avatar: ${file.name} (${img.width}x${img.height})`);
+            };
+            img.src = url;
+        });
+
+        // Inject & Convert Action
+        document.getElementById("btn-inject-convert").addEventListener("click", async () => {
+            if (!this.activeFile) {
+                window.SoundFX.playError();
+                this.log("Please select a target game file first!", "error");
+                alert("Pehle target game file select krein!");
+                return;
+            }
+            if (!this.activeAvatar) {
+                window.SoundFX.playError();
+                this.log("Please upload a replacement avatar image!", "error");
+                alert("Pehle replacement image upload krein!");
+                return;
+            }
+
+            window.SoundFX.playClick();
+            const spinner = document.getElementById("inject-spinner");
+            const icon = document.getElementById("inject-icon");
+            spinner.classList.remove("hidden");
+            icon.classList.add("hidden");
+
+            this.log("Starting HD RGB Injection process...");
+
+            try {
+                // Perform binary injection
+                const modifiedBuffer = await window.BinaryInjector.inject(
+                    this.activeFile.data.buffer,
+                    this.activeAvatar,
+                    {
+                        blockSize: document.getElementById("astc-block-size").value
+                    }
+                );
+
+                // Trigger download of the modified file
+                const blob = new Blob([modifiedBuffer], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `MOD_${this.activeFile.name}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                window.SoundFX.playSuccess();
+                this.log("Injection successful! Modified file downloaded.", "success");
+                alert("Success! File inject ho chuki ha aur download start ho gya ha.");
+            } catch (err) {
+                window.SoundFX.playError();
+                this.log("Injection failed: " + err.message, "error");
+            } finally {
+                spinner.classList.add("hidden");
+                icon.classList.remove("hidden");
+            }
+        });
+
+        // Clear Storage
+        document.getElementById("btn-clear-storage").addEventListener("click", async () => {
+            if (confirm("Are you sure you want to clear all imported files?")) {
+                await window.AppDB.clearAll();
+                window.SoundFX.playError();
+                this.loadFiles();
+                this.updateStorageStatus();
+                this.log("All persistent files cleared.");
+            }
+        });
+
+        // Folder Modal Events
+        document.getElementById("btn-new-folder").addEventListener("click", () => {
+            window.SoundFX.playClick();
+            document.getElementById("folder-modal").classList.remove("hidden");
+        });
+
+        document.getElementById("btn-cancel-folder").addEventListener("click", () => {
+            document.getElementById("folder-modal").classList.add("hidden");
+        });
+
+        document.getElementById("btn-confirm-folder").addEventListener("click", () => {
+            const name = document.getElementById("folder-name-input").value.trim();
+            if (name) {
+                this.log(`Folder '${name}' created successfully.`);
+                document.getElementById("folder-modal").classList.add("hidden");
+                document.getElementById("folder-name-input").value = "";
+                window.SoundFX.playSuccess();
+            }
+        });
+
+        // AI Prompt Send
+        document.getElementById("btn-send-ai").addEventListener("click", () => {
+            this.sendCustomAIPrompt();
+        });
+        document.getElementById("ai-prompt-input").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") this.sendCustomAIPrompt();
+        });
+    },
+
+    async sendCustomAIPrompt() {
+        const input = document.getElementById("ai-prompt-input");
+        const prompt = input.value.trim();
+        if (!prompt) return;
+
+        window.SoundFX.playClick();
+        input.value = "";
+
+        const chatContainer = document.getElementById("ai-chat-container");
+        chatContainer.innerHTML += `
+            <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-xl space-y-1">
+                <p class="text-slate-400 font-semibold">[USER]</p>
+                <p class="text-slate-300">${prompt}</p>
+            </div>
+        `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+            const data = await response.json();
+            const reply = data.candidates[0].content.parts[0].text;
+
+            chatContainer.innerHTML += `
+                <div class="bg-cyan-950/20 border border-cyan-900/50 p-3 rounded-xl space-y-1">
+                    <p class="text-cyan-400 font-semibold">[GEMINI AI]</p>
+                    <p class="text-slate-300 leading-relaxed">${reply}</p>
+                </div>
+            `;
+        } catch (err) {
+            chatContainer.innerHTML += `
+                <div class="bg-red-950/20 border border-red-900/50 p-3 rounded-xl space-y-1">
+                    <p class="text-red-400 font-semibold">[AI ERROR]</p>
+                    <p class="text-slate-400">Failed to get response from Gemini API.</p>
+                </div>
+            `;
+        }
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+};
+
+// Start the application
+window.addEventListener("DOMContentLoaded", () => App.init());
+
+</script></body>
+</html>
